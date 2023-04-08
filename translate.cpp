@@ -5,9 +5,6 @@
 
 #include "widgets.h"
 
-#include "USL_Translator.h"
-#include "USL_To_Binary.h"
-
 void Translate(std::vector<std::string>& source_paths, std::string& output_dir, std::pair<std::string, std::string> from_to)
 {
 	int all_files = 0;
@@ -41,16 +38,26 @@ void Translate(std::vector<std::string>& source_paths, std::string& output_dir, 
 					{ (char*)code.c_str(), code.size() * sizeof(char) });
 
 				for (auto& item : result.prompt)
-					std::cout << item;
+					std::cout << item << '\n';
 
 				if (result.success)
 				{
+					std::string source_file_name{ entry.path().u8string() };
+					int slash_pos = source_file_name.size() - 1;
+
+					while (source_file_name.at(slash_pos) != '\\')
+						slash_pos--;
+
+					source_file_name = source_file_name.substr(slash_pos + 1, source_file_name.size() - slash_pos);
+
+					//Dump to file
 					std::fstream translated;
-					std::string file_name = output_dir + "\\" + "plik" + ".ub";
-					translated.open(file_name, std::ios::binary | std::ios::out);
-					for (uint8_t byte : result.data)
-						translated.write((char*)&byte, 1);
+					std::string translated_file_name = output_dir + "\\" + source_file_name + ".trs";
+					translated.open(translated_file_name, std::ios::binary | std::ios::out);
+					translated.write((char*)&result.data[0], result.data.size());
 					translated.close();
+
+					std::cout << "Saved: " << translated_file_name << '\n';
 					std::cout << "File traslation: SUCCESS\n";
 				}
 				else
@@ -58,13 +65,17 @@ void Translate(std::vector<std::string>& source_paths, std::string& output_dir, 
 					std::cout << "File traslation: FAILED\n";
 					++failed_tasks;
 				}
-				
 			}
-			else
+			else if (!std::filesystem::is_directory(entry.path()))
 			{
 				std::cout << "File does not exist / is not accessible\n";
 			}
+			else continue;
+			Line();
 		}
+
+		source_paths.clear();
+		output_dir = "";
 	}
 	
 	std::cout << "Translation result: \n";

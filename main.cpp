@@ -8,8 +8,12 @@
 int main()
 {
 	USL_Translator::USL_Translator::Initialize();
-	USL_Translator::USL_To_Binary* Compiler = new USL_Translator::USL_To_Binary;
-	USL_Translator::USL_Translator::Load(Compiler);
+
+	USL_Translator::TranslatorBase* NewTranslator = new USL_Translator::USL_To_Binary;
+	USL_Translator::USL_Translator::Load(NewTranslator);
+
+	NewTranslator = new USL_Translator::USL_Binary_To_GLSL;
+	USL_Translator::USL_Translator::Load(NewTranslator);
 
 	Line();
 	std::cout << "\t\tWelcome to USL translator!\n";

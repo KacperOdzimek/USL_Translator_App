@@ -12,7 +12,8 @@ void MainMenu()
 		{
 			{"Translate",						PageTranslate},
 			{"Create blank compiling pipeline", CreatePipeline},
-			{"Edit compiling pipeline",			EditPipeline}
+			{"Edit compiling pipeline",			EditPipeline},
+			{"Exit",							[]() {return;}}
 		}
 	);
 }
@@ -77,6 +78,8 @@ void PageTranslate()
 		}
 	}
 	config_file.close();
+
+	MainMenu();
 }
 
 void CreatePipeline()

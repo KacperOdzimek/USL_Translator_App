@@ -68,7 +68,7 @@ USL_Translator::Data load_external_file_callback_function(int file_type, std::st
 	return { nullptr, 0 };
 }
 
-void Translate(std::vector<std::string>& source_paths, std::string& output_dir, 
+void Translate(std::vector<std::string>& source_paths, std::string& output_dir, std::string file_extension,
 	std::vector<std::string>& libraries_path, std::pair<std::string, std::string> from_to)
 {
 	int all_files = 0;
@@ -123,7 +123,7 @@ void Translate(std::vector<std::string>& source_paths, std::string& output_dir,
 
 					//Dump to file
 					std::fstream translated;
-					std::string translated_file_name = output_dir + "\\" + source_file_name + ".trs";
+					std::string translated_file_name = output_dir + "\\" + extrude_file_name_from_path(source_file_name) + '.' + file_extension;
 					translated.open(translated_file_name, std::ios::binary | std::ios::out);
 					translated.write((char*)&result.data[0], result.data.size());
 					translated.close();

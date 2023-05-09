@@ -3,7 +3,7 @@
 #include "pages.h"
 
 #include "USL_Translator.h"
-#include "USL_To_Binary.h"
+#include "include_translators.h"
 
 int main()
 {

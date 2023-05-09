@@ -1,4 +1,15 @@
 #include "widgets.h"
+#include <cstdlib>
+
+void Clear()
+{
+#ifdef _WIN32
+	std::system("cls");
+#else
+	// Assume POSIX
+	std::system("clear");
+#endif
+}
 
 void Line()
 {

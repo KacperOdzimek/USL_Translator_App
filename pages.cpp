@@ -60,6 +60,7 @@ void PageTranslate()
 	}
 
 	std::vector<std::string> SourcePaths;
+	std::vector<std::string> LibsPaths;
 	std::string OutputDir;
 
 	for (auto& program_line : program)
@@ -70,11 +71,13 @@ void PageTranslate()
 			continue;
 		else if (splited[0] == "AddSourcePath")
 			SourcePaths.push_back(splited[1]);
+		else if (splited[0] == "AddLibsPath")
+			LibsPaths.push_back(splited[1]);
 		else if (splited[0] == "SetOutputDir")
 			OutputDir = splited[1];
 		else if (splited[0] == "Translate")
 		{
-			Translate(SourcePaths, OutputDir, {splited[1], splited[2]});
+			Translate(SourcePaths, OutputDir, LibsPaths, {splited[1], splited[2]});
 		}
 	}
 	config_file.close();
@@ -146,6 +149,7 @@ void EditPipeline()
 	std::map<std::string, std::vector<std::string>> commands = 
 	{
 		{"AddSourcePath", {"Path"}},
+		{"AddLibsPath",   {"Path"}},
 		{"SetOutputDir",  {"Dir"}},
 		{"Translate",     {"From", "To"}},
 	};

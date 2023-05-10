@@ -68,7 +68,77 @@ USL_Translator::Data load_external_file_callback_function(int file_type, std::st
 	return { nullptr, 0 };
 }
 
-void Translate(std::vector<std::string>& source_paths, std::string& output_dir, std::string file_extension,
+std::string gen_header(std::map<std::string, USL_Translator::TranslationResult::HeaderEntry>& data)
+{
+	auto should_be_put_in_quote = [](std::string txt) -> bool
+	{
+		if (txt == "true")
+			return false;
+		if (txt == "false")
+			return false;
+		bool only_digits = true;
+		for (auto& x : txt)
+			if (x < '0' || x > '9')
+				only_digits = false;
+		return !only_digits;
+	};
+
+	//add "" if content should be in ""
+	auto quote = [should_be_put_in_quote](std::string txt) -> std::string
+	{
+		if (should_be_put_in_quote(txt))
+			return std::string('\"' + txt + '\"');
+		else return txt;
+	};
+
+	std::string content = "{\n";
+	int counter = 0;
+	for (auto& entry : data)
+	{
+		content += '\t' + quote(entry.first) + ':';
+		switch (entry.second.type)
+		{
+		case USL_Translator::TranslationResult::HeaderEntry::Type::Value:
+			content += quote(entry.second.content.at(0)); 
+			break;
+		case USL_Translator::TranslationResult::HeaderEntry::Type::Array:
+		{
+			content += "[\n";
+			for (int i = 0; i < entry.second.content.size(); i++)
+			{
+				content += "\t\t" + quote(entry.second.content.at(i));
+				if (i != entry.second.content.size() - 1)
+					content += ',';
+				content += '\n';
+			}
+			content += "\t]";
+			break;
+		}
+		case USL_Translator::TranslationResult::HeaderEntry::Type::Object:
+		{
+			content += "{\n";
+			for (int i = 0; i < entry.second.content.size(); i += 2)
+			{
+				content += "\t\t" + quote(entry.second.content.at(i)) + ':' + quote(entry.second.content.at(i + 1));
+				if (i + 1 != entry.second.content.size() - 1)
+					content += ',';
+				content += '\n';
+			}
+			content += "\t}";
+			break;
+		}
+		}
+		++counter;
+		if (counter != data.size())
+			content += ',';
+		content += '\n';
+	}
+	content += '}';
+	return content;
+}
+
+void Translate(std::vector<std::string>& source_paths, std::string& output_dir,
+	std::string file_extension, std::string headers_dir,
 	std::vector<std::string>& libraries_path, std::pair<std::string, std::string> from_to)
 {
 	int all_files = 0;
@@ -130,6 +200,26 @@ void Translate(std::vector<std::string>& source_paths, std::string& output_dir, 
 
 					std::cout << "Saved: " << translated_file_name << '\n';
 					std::cout << "File traslation: SUCCESS\n";
+
+					//Generate header file
+					if (result.data_for_header.size() != 0 && headers_dir.size() != 0)
+					{
+						std::fstream header;
+						std::string header_path_and_name = headers_dir + "\\" + extrude_file_name_from_path(source_file_name) + '.' + "json";
+						std::cout << "Generating Header: " + header_path_and_name + '\n';
+						header.open(header_path_and_name, std::ios::binary | std::ios::out);
+						if (header.good())
+						{
+							auto header_content = gen_header(result.data_for_header);
+							header.write(header_content.c_str(), header_content.size());
+							header.close();
+							std::cout << "Header generation: SUCCESS\n";
+						}
+						else
+						{
+							std::cout << "Header generation: FAILED\n";
+						}
+					}
 				}
 				else
 				{

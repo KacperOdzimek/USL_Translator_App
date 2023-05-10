@@ -39,7 +39,16 @@ USL_Translator::Data load_external_file_callback_function(int file_type, std::st
 	{
 		for (auto& libs_path : libraries_path)
 		{
-			auto iterator = std::filesystem::directory_iterator(libs_path);
+			std::filesystem::directory_iterator iterator;
+			try
+			{
+				iterator = std::filesystem::directory_iterator(libs_path);
+			}
+			catch (std::exception)
+			{
+				std::cout << "Critical error: Invalid libraries path!\n";
+				continue;
+			}
 
 			for (const auto& file : iterator)
 			{
@@ -146,7 +155,16 @@ void Translate(std::vector<std::string>& source_paths, std::string& output_dir,
 
 	for (auto& source : source_paths)
 	{
-		auto iterator = std::filesystem::directory_iterator(source);
+		std::filesystem::directory_iterator iterator;
+		try
+		{
+			iterator = std::filesystem::directory_iterator(source);
+		}
+		catch (std::exception)
+		{
+			std::cout << "Critical error: Invalid source path!\n";
+			continue;
+		}	
 
 		Line();
 		std::cout << "Translating " << from_to.first << " to " << from_to.second << '\n';
@@ -195,11 +213,20 @@ void Translate(std::vector<std::string>& source_paths, std::string& output_dir,
 					std::fstream translated;
 					std::string translated_file_name = output_dir + "\\" + extrude_file_name_from_path(source_file_name) + '.' + file_extension;
 					translated.open(translated_file_name, std::ios::binary | std::ios::out);
-					translated.write((char*)&result.data[0], result.data.size());
-					translated.close();
-
-					std::cout << "Saved: " << translated_file_name << '\n';
-					std::cout << "File traslation: SUCCESS\n";
+					if (translated.good())
+					{
+						translated.write((char*)&result.data[0], result.data.size());
+						translated.close();
+						std::cout << "Saved: " << translated_file_name << '\n';
+						std::cout << "File traslation: SUCCESS\n";
+					}
+					else
+					{
+						std::cout << "Failed to save: " << translated_file_name << '\n';
+						std::cout << "File traslation: FAILED\n";
+						++failed_tasks;
+					}
+					
 
 					//Generate header file
 					if (result.data_for_header.size() != 0 && headers_dir.size() != 0)
